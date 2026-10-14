@@ -1,0 +1,10 @@
+metric,value
+total_rows,3477
+train_rows,2245
+val_rows,578
+test_rows,654
+unique_classes,4
+unique_vineyards,28
+unique_power_grid_points,2
+exact_duplicate_rows,1514
+label_metadata_mismatch_rows,1344

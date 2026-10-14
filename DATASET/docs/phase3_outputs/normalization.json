@@ -1,0 +1,23 @@
+{
+  "weather_columns": [
+    "temperature",
+    "humidity",
+    "rainfall"
+  ],
+  "mean": {
+    "temperature": 27.88813553929367,
+    "humidity": 68.5524479796373,
+    "rainfall": 15.728102449888643
+  },
+  "std": {
+    "temperature": 0.2712271175380132,
+    "humidity": 1.1641067884731358,
+    "rainfall": 0.387312323844286
+  },
+  "class_names": [
+    "Black Rot",
+    "Esca",
+    "Healthy",
+    "Leaf Blight"
+  ]
+}

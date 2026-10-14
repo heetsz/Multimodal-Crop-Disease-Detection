@@ -1,0 +1,152 @@
+Your sir’s priority list is correct. I would run experiments in this order:
+1. Image-only baselines
+   - MobileNetV2
+   - ResNet50
+   - EfficientNet-B0/B3
+   - ViT-B/16
+   - Swin-T
+   - ConvNeXt-T
+   - DINOv2-S frozen/fine-tuned
+2. Weather-only baseline
+   - Weather MLP only
+     This is important. If weather-only accuracy is suspiciously high, your weather is leaking labels.
+3. Multimodal baselines
+   - ViT + weather concat
+   - Swin-T + weather concat
+   - ConvNeXt-T + weather concat
+4. Fusion comparison
+   - Concatenation
+   - Late fusion
+   - Gated fusion
+   - Optional: cross-attention / FiLM
+5. Weather feature ablation
+   - image only
+   - image + temperature
+   - image + humidity
+   - image + rainfall
+   - image + temp + humidity
+   - image + all weather
+6. Weather window ablation
+   - same day
+   - 3-day
+   - 7-day
+   - 14-day
+7. Statistical validation
+   - at least 3 seeds, preferably 5
+   - report mean ± std
+   - paired test between image-only and multimodal model
+8. Class-wise analysis
+   - confusion matrix
+   - per-class precision/recall/F1
+   - identify which diseases benefit from weather
+9. Explainability
+   - Grad-CAM or attention rollout for image branch
+   - permutation importance or SHAP for weather branch
+
+===============================================================
+
+Yes. Keep it to **5 phases**.
+
+**Phase 1: Dataset Truth Check**
+Audit what data we actually have.
+
+Goal:
+- Identify image dataset source
+- Check class labels
+- Count images per class
+- Check whether images have real `date`, `location`, or metadata
+- Decide whether weather pairing can be real or only simulated
+
+Output:
+- dataset summary table
+- class distribution
+- final decision: real weather pairing possible or not
+
+**Phase 2: Real Weather Pairing**
+Make the weather part scientifically valid.
+
+Goal:
+- For every image, attach real weather from NASA POWER or another source
+- Use `date + latitude + longitude`
+- Create weather windows: same-day, 3-day, 7-day, 14-day
+- Store clean CSV files
+
+Output:
+- `multimodal_train.csv`
+- `multimodal_val.csv`
+- `multimodal_test.csv`
+- weather-pairing explanation for paper
+
+**Phase 3: Baseline Experiments**
+Build trustworthy comparison models.
+
+Goal:
+- Train image-only models first
+- Train weather-only model
+- Train simple multimodal model
+
+Models:
+- MobileNetV2 or EfficientNet-B0
+- ResNet50
+- ViT
+- Swin-T or ConvNeXt-T
+- Weather-only MLP
+- Image + weather concatenation model
+
+Output:
+- baseline accuracy, precision, recall, F1
+- confusion matrix
+- proof that weather is not leaking labels
+
+**Phase 4: Final Multimodal Architecture**
+Build the actual research model.
+
+Goal:
+- Use modern image encoder
+- Use weather temporal encoder
+- Compare fusion strategies
+
+Recommended final architecture:
+
+```text
+Image → Swin-T / ConvNeXt-T / DINOv2 → image embedding
+Weather 1/3/7/14 days → small MLP/GRU → weather embedding
+image + weather → gated fusion → classifier
+```
+
+Experiments:
+- image only vs image + weather
+- temperature only
+- humidity only
+- rainfall only
+- all weather
+- same-day vs 3/7/14-day weather
+- concat vs late fusion vs gated fusion
+
+Output:
+- final model results
+- ablation tables
+- best architecture selection
+
+**Phase 5: Paper-Ready Validation**
+Make the work conference-submission worthy.
+
+Goal:
+- Run best models across 3-5 random seeds
+- Report mean ± std
+- Add class-wise analysis
+- Add Grad-CAM/attention maps
+- Add weather importance using SHAP/permutation importance
+- Fix paper claims and remove fake numbers
+
+Output:
+- final result tables
+- final figures
+- limitations
+- corrected research paper draft
+
+The simplest path is:
+
+```text
+Dataset truth → Real weather → Baselines → Final model → Paper validation
+```
