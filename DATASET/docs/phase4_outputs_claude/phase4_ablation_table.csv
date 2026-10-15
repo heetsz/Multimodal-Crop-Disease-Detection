@@ -1,0 +1,15 @@
+label,stage,backbone,fusion,group,variant,val_f1,test_acc,test_acc_std,test_f1,test_f1_std,n_seeds
+A|swin_t|image_only|none|ctrl=None,A,swin_t,image_only,reference,image only,0.8181513783934357,0.8272171253822631,0.012655157000953208,0.7871860666031364,0.010764627920518306,5
+A|swin_t|concat|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,A,swin_t,concat,reference,"concat, 7-day, all weather (real)",0.8275682843339098,0.8321100917431192,0.01583141174990193,0.7932162915732042,0.02460259492589212,5
+B|swin_t|concat|win=7;feat=temperature;enc=mlp|ctrl=None,B,swin_t,concat,feature,temperature only,0.8292744417564437,0.8284403669724771,0.008119827551897099,0.7907236783749303,0.009742441434806815,5
+B|swin_t|concat|win=7;feat=humidity;enc=mlp|ctrl=None,B,swin_t,concat,feature,humidity only,0.8270352131830405,0.8244648318042813,0.0066121554466176315,0.7860299111127673,0.008676980046323533,5
+B|swin_t|concat|win=7;feat=rainfall;enc=mlp|ctrl=None,B,swin_t,concat,feature,rainfall only,0.8270352131830405,0.8244648318042813,0.0066121554466176315,0.7860299111127673,0.008676980046323533,5
+B|swin_t|concat|win=7;feat=temperature+humidity;enc=mlp|ctrl=None,B,swin_t,concat,feature,temperature + humidity,0.8269382493020514,0.8311926605504587,0.009766800870135348,0.7931439139354626,0.008530129135237655,5
+B|swin_t|concat|win=1;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,B,swin_t,concat,window,1-day,0.8275682843339098,0.8321100917431192,0.01583141174990193,0.7932162915732042,0.02460259492589212,5
+B|swin_t|concat|win=3;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,B,swin_t,concat,window,3-day,0.8262598419403954,0.8330275229357799,0.016763877765951944,0.7941547783022371,0.025558294812816046,5
+B|swin_t|concat|win=14;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,B,swin_t,concat,window,14-day,0.8272354361921904,0.8321100917431192,0.01583141174990193,0.7932162915732042,0.02460259492589212,5
+B|swin_t|concat|win=1/3/7/14;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,B,swin_t,concat,window,multi-scale 1/3/7/14 (MLP),0.8265314540931575,0.8327217125382264,0.00888956688302665,0.7944880533519392,0.009303930088945775,5
+B|swin_t|concat|win=1/3/7/14;feat=temperature+humidity+rainfall;enc=gru|ctrl=None,B,swin_t,concat,window,multi-scale 1/3/7/14 (GRU over scales),0.8239897384218299,0.8262996941896024,0.011004926125655397,0.7849117103404343,0.014158825555966226,5
+B|swin_t|concat|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=shuffled,B,swin_t,concat,control,shuffled weather,0.8284636468341894,0.8321100917431192,0.016232455079009396,0.7932245197417942,0.024820439119774558,5
+B|swin_t|concat|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=zeros,B,swin_t,concat,control,zero weather,0.8293333280747316,0.8327217125382262,0.01623965510379416,0.7940606834668461,0.024528471872678502,5
+B|swin_t|concat|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=grid_onehot,B,swin_t,concat,control,grid-cell one-hot (no weather values),0.8268002663950285,0.8327217125382264,0.009885767507794893,0.7965319993848498,0.010934751949069225,5

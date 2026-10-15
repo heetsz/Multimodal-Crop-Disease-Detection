@@ -1,0 +1,25 @@
+{
+  "weather_window_days": 7,
+  "weather_columns": [
+    "temp_mean_7d",
+    "humidity_mean_7d",
+    "rainfall_sum_7d"
+  ],
+  "mean": {
+    "temp_mean_7d": 27.88813553929367,
+    "humidity_mean_7d": 68.5524479796373,
+    "rainfall_sum_7d": 15.728102449888643
+  },
+  "std": {
+    "temp_mean_7d": 0.2712271175380132,
+    "humidity_mean_7d": 1.1641067884731358,
+    "rainfall_sum_7d": 0.387312323844286
+  },
+  "class_names": [
+    "Black Rot",
+    "Esca",
+    "Healthy",
+    "Leaf Blight"
+  ],
+  "seed": 42
+}

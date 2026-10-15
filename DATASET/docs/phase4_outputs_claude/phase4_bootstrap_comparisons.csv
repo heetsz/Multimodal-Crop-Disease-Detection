@@ -1,0 +1,8 @@
+comparison,A,B,observed_diff_f1,ci95_low,ci95_high,share_boot_diff_le_0,ci_excludes_zero
+fusion vs image-only,concat (real weather),image only,0.006030224970067688,-0.010941590132487753,0.023848349310446246,0.231,False
+fusion vs image-only,late (real weather),image only,0.003941874005294088,-0.0077645601594908496,0.016088644372633232,0.287,False
+fusion vs image-only,gated (real weather),image only,0.006720428348276508,-0.006219590152485565,0.020364036862659845,0.168,False
+fusion vs image-only,film (real weather),image only,0.005839415370488221,-0.006600101968031246,0.020911450584555964,0.195,False
+real vs control,concat (real weather),shuffled weather,-8.228168590096453e-06,-0.001151082189467067,0.0011208333915235134,0.542,False
+real vs control,concat (real weather),zero weather,-0.0008443918936420269,-0.002375668076107248,0.0005730311810632498,0.902,False
+real vs control,concat (real weather),grid-cell one-hot,-0.003315707811645696,-0.015012808541576462,0.010175643098920216,0.73,False

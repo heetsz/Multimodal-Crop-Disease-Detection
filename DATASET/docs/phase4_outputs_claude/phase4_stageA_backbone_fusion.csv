@@ -1,0 +1,11 @@
+label,stage,backbone,fusion,group,variant,val_f1,test_acc,test_acc_std,test_f1,test_f1_std,n_seeds
+A|swin_t|image_only|none|ctrl=None,A,swin_t,image_only,backbone x fusion,swin_t / image_only,0.8181513783934357,0.8272171253822631,0.012655157000953208,0.7871860666031364,0.010764627920518306,5
+A|swin_t|concat|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,A,swin_t,concat,backbone x fusion,swin_t / concat,0.8275682843339098,0.8321100917431192,0.01583141174990193,0.7932162915732042,0.02460259492589212,5
+A|swin_t|late|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,A,swin_t,late,backbone x fusion,swin_t / late,0.8179184802667263,0.8311926605504587,0.007301123172057073,0.7911279406084305,0.005634040591037322,5
+A|swin_t|gated|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,A,swin_t,gated,backbone x fusion,swin_t / gated,0.816294641856335,0.8333333333333334,0.004587155963302805,0.793906494951413,0.004294254362246943,5
+A|swin_t|film|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,A,swin_t,film,backbone x fusion,swin_t / film,0.8155598030147437,0.8296636085626912,0.010234373413260806,0.7930254819736247,0.00725911799857336,5
+A|mobilenet_v2|image_only|none|ctrl=None,A,mobilenet_v2,image_only,backbone x fusion,mobilenet_v2 / image_only,0.7899672199467321,0.7706422018348624,0.004187481326492084,0.7088306791092266,0.012338901824605848,5
+A|mobilenet_v2|concat|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,A,mobilenet_v2,concat,backbone x fusion,mobilenet_v2 / concat,0.7930303994341197,0.7807339449541285,0.013744467923085181,0.7409366763445772,0.009272841108281825,5
+A|mobilenet_v2|late|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,A,mobilenet_v2,late,backbone x fusion,mobilenet_v2 / late,0.7866832492714011,0.7743119266055045,0.009275688616576844,0.7111802202915076,0.01730170378581588,5
+A|mobilenet_v2|gated|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,A,mobilenet_v2,gated,backbone x fusion,mobilenet_v2 / gated,0.7910400939920139,0.7782874617737003,0.010370535142393377,0.7211367998250929,0.019493895551340176,5
+A|mobilenet_v2|film|win=7;feat=temperature+humidity+rainfall;enc=mlp|ctrl=None,A,mobilenet_v2,film,backbone x fusion,mobilenet_v2 / film,0.7858071148130877,0.7749235474006116,0.0038073087455623438,0.7148856364632341,0.010547761319455166,5

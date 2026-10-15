@@ -1,0 +1,45 @@
+{
+  "backbone": "swin_t",
+  "fusion": "concat",
+  "weather": {
+    "windows": [
+      7
+    ],
+    "features": [
+      "temperature",
+      "humidity",
+      "rainfall"
+    ],
+    "encoder": "mlp"
+  },
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "class_names": [
+    "Black Rot",
+    "Esca",
+    "Healthy",
+    "Leaf Blight"
+  ],
+  "final_seeds": [
+    0,
+    1,
+    2
+  ],
+  "finetune_last_stage": false,
+  "checkpoint_dir": "/content/drive/MyDrive/DATASET/docs/phase4_outputs_claude/checkpoints",
+  "head": {
+    "hidden": 256,
+    "weather_dim": 32,
+    "dropout": 0.3,
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "epochs": 60,
+    "patience": 10
+  },
+  "selection_rule": "validation macro-F1 (image-only head picks backbone; weather heads pick fusion)"
+}
