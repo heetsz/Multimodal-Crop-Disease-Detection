@@ -1,0 +1,314 @@
+Your paper is a good starting point, but to make it publishable you should improve the **experimental validity** more than the writing. The current paper already reports a reasonable research question and honest limitations. The main weakness is that the current results may be affected by duplicate and group leakage.
+
+## Highest-priority improvements
+
+### 1. Rebuild the train/validation/test split
+
+This is the most important step.
+
+Your current audit reports:
+
+- 3,477 images
+- 1,514 duplicate rows
+- 446 duplicate groups
+- 2 duplicate groups crossing disease classes
+- 28 vineyards
+- 1,344 metadata/folder-label disagreements
+
+Before making strong claims, create a new split where:
+
+```text
+all exact/near-duplicate images stay in one split
+all images from a held-out vineyard stay in one split
+```
+
+Preferably evaluate two protocols:
+
+1. **Duplicate-group split**
+2. **Vineyard-held-out split**
+
+Then update the paper with:
+
+- Number of unique images
+- Number of duplicate groups
+- Vineyards per partition
+- Class counts per partition
+- Confirmation that no duplicate group crosses partitions
+
+This is more important than trying more backbones.
+
+### 2. Re-run the main comparison on the strict split
+
+Use the same training and test samples for:
+
+- ConvNeXt-Tiny image-only
+- ConvNeXt-Tiny + concatenated weather
+- ConvNeXt-Tiny + gated fusion
+- Weather-only MLP
+- MobileNetV2 image-only
+- MobileNetV2 + weather
+
+The central table should answer:
+
+| Model | Accuracy | Balanced accuracy | Macro-F1 | Mean ± std |
+|---|---:|---:|---:|---:|
+| Image-only | | | | |
+| Image + weather | | | | |
+| Weather-only | | | | |
+
+Your strongest result should be compared against the strongest image-only model, not just against a weaker baseline.
+
+### 3. Run multiple seeds
+
+The current paper should not claim statistical reliability from single-run results. Train the key models with at least three seeds, preferably five.
+
+Report:
+
+```text
+Image-only macro-F1: 0.xxx ± 0.xxx
+Multimodal macro-F1: 0.xxx ± 0.xxx
+```
+
+Also report confidence intervals or a paired test. Do not write that weather “significantly improves” performance unless you actually calculate and report the test.
+
+### 4. Add a weather-shuffling control
+
+This experiment would make your central claim much stronger.
+
+Compare:
+
+1. Correctly paired weather
+2. Randomly shuffled weather
+3. Constant or mean weather
+4. Image-only
+
+Expected interpretation:
+
+- Correct weather > shuffled weather: evidence that pairing contains useful information
+- Correct weather ≈ shuffled weather: the improvement may come from regularization or split artifacts
+- Weather-only weak: weather is complementary rather than sufficient
+
+This should be one of the key results in the paper.
+
+### 5. Be precise about the single-date limitation
+
+All images have the same capture date, so the current project does not truly test generalization across seasons or dates.
+
+Change the claim from something broad like:
+
+> Weather-aware temporal modeling improves disease recognition.
+
+to something narrower:
+
+> A seven-day weather summary associated with the recorded capture date improved performance on the evaluated split.
+
+To make the stronger claim, you need images from:
+
+- Multiple capture dates
+- Multiple growing periods
+- Multiple vineyards
+- Preferably multiple regions
+
+### 6. Resolve the label disagreement
+
+The paper currently says folder labels were used, which is transparent, but reviewers may ask why.
+
+You should create a label-audit table:
+
+| Label status | Count |
+|---|---:|
+| Folder and metadata agree | |
+| Folder and metadata disagree | 1,344 |
+| Manually verified | |
+| Excluded or corrected | |
+
+Then manually inspect a representative sample of disagreement cases. If possible, obtain an authoritative label source from the dataset creators.
+
+Do not silently treat one label source as ground truth.
+
+### 7. Add stronger evaluation metrics
+
+Accuracy alone is not enough. Include:
+
+- Macro-F1
+- Balanced accuracy
+- Per-class precision, recall, and F1
+- Cohen’s kappa or Matthews correlation coefficient
+- Confusion matrices
+- Calibration metrics, such as expected calibration error
+- Confidence intervals
+
+For an agricultural application, class-wise false negatives are especially important. Discuss which diseases are most often missed.
+
+## Improve the paper structure
+
+### Abstract
+
+The current abstract is much better than the original, but it should clearly distinguish:
+
+- Recorded split performance
+- Strict-validation status
+- Limitations
+
+Avoid presenting the 85.47% result as a final generalization score.
+
+### Introduction
+
+State the precise research question and contribution:
+
+> This paper evaluates whether weather features add predictive value to grapevine leaf images under a controlled image–weather fusion protocol.
+
+Avoid claiming a new architecture if the main contribution is experimental evaluation.
+
+### Related work
+
+Add recent, verifiable references in three areas:
+
+1. Grapevine disease recognition
+2. Plant-disease dataset leakage and generalization
+3. Weather or environmental multimodal learning
+
+Verify every citation. Do not include placeholder, incomplete, or unverified references.
+
+### Methods
+
+Add enough detail for reproduction:
+
+- Exact split-generation procedure
+- Duplicate detection method
+- Image preprocessing
+- Data augmentation
+- Backbone pretrained weights
+- Optimizer
+- Learning rate
+- Batch size
+- Number of epochs
+- Early-stopping rule
+- Random seeds
+- Weather source and variables
+- Weather window definition
+- Missing-value handling
+- Hardware and software versions
+
+### Results
+
+Separate the results into:
+
+1. Dataset audit
+2. Baselines
+3. Weather ablation
+4. Fusion comparison
+5. Strict group-aware evaluation
+6. Error analysis
+7. Statistical validation
+
+Do not mix results from different experiment tracks unless the split and preprocessing are identical.
+
+## Figures you should add
+
+The most valuable figures are:
+
+### 1. Dataset and model pipeline
+
+```text
+Leaf image + GPS/date
+          ↓
+Duplicate and label audit
+          ↓
+Weather retrieval and alignment
+          ↓
+Image encoder + weather encoder
+          ↓
+Fusion strategy
+          ↓
+Disease prediction
+```
+
+### 2. Dataset class distribution
+
+Show the number of images in each of the four classes.
+
+### 3. Split and leakage diagram
+
+Show:
+
+- Total images
+- Duplicate groups
+- Train/validation/test assignment
+- Vineyard grouping
+- No duplicate overlap
+
+### 4. Model comparison chart
+
+Plot accuracy and macro-F1 for:
+
+- Image-only
+- Weather-only
+- Concatenation
+- Gated fusion
+- FiLM
+- Late fusion
+
+### 5. Per-class confusion matrices
+
+Include image-only and best multimodal results side by side.
+
+### 6. Weather ablation chart
+
+Show the effect of:
+
+- Temperature
+- Humidity
+- Rainfall
+- Temperature + humidity
+- All features
+- Shuffled weather
+
+The shuffled-weather plot is especially important.
+
+## Things you should not claim yet
+
+Until the strict experiments are completed, avoid claiming that:
+
+- The method generalizes to real vineyards
+- Weather causally improves disease recognition
+- The model works across seasons
+- The model is deployment-ready
+- The model is statistically superior
+- The method is better than models reporting 99% accuracy
+- Gated fusion is universally the best method
+
+Use wording such as:
+
+> On the current evaluated split, gated fusion produced the highest recorded performance.
+
+## What would make the paper genuinely strong
+
+The minimum convincing package would be:
+
+1. Duplicate- and vineyard-aware split
+2. Three-to-five random seeds
+3. Image-only versus multimodal comparison
+4. Weather-shuffling control
+5. Per-class metrics
+6. Confidence intervals or paired statistical testing
+7. Transparent label audit
+8. Clear limitations about the single capture date
+9. Reproducible code and configuration files
+10. Independent or vineyard-held-out validation if possible
+
+## Recommended order of work
+
+Do this in order:
+
+1. Fix duplicate/group splitting.
+2. Re-run image-only and multimodal baselines.
+3. Run three or five seeds.
+4. Add shuffled-weather control.
+5. Generate class-wise and confusion-matrix results.
+6. Update the paper tables and figures.
+7. Verify all references.
+8. Compile the LaTeX paper and check page limits and formatting.
+9. Release the split manifests, configuration, and evaluation scripts.
+
+The key point is that you do **not** need to chase 99% accuracy. A carefully validated 80–85% result can be publishable. A 99% result affected by duplicate leakage is not persuasive. Your paper will become publishable when it demonstrates that the reported weather improvement survives a fair, leakage-aware evaluation.
