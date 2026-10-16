@@ -77,7 +77,25 @@ The weather pipeline associates image records with external weather features usi
 \subsection{Preprocessing}
 Images are resized and normalized for transfer learning. The weather variables are standardized using training-set statistics. The Phase 3 baseline experiments use MobileNetV2 for the visual branch and an MLP for the weather-only branch. Phase 4 uses ConvNeXt-Tiny for the visual branch and compares several fusion heads. Models are selected using validation performance and evaluated on the recorded test partition.
 
+% System architecture diagram
+% Place grapevine_architecture.png in the same folder as this .tex file.
+% IEEEtran may move this two-column figure to the top of a page.
+
+\begin{figure*}[!t]
+    \centering
+    \setlength{\fboxrule}{0.8pt}
+    \setlength{\fboxsep}{4pt}
+    \fbox{%
+        \includegraphics[width=0.93\textwidth]{Diagram.png}%
+    }
+    \caption{System architecture of the weather-aware multimodal grapevine disease detection model, combining ConvNeXt-Tiny visual features with seven-day weather features through gated fusion.}
+    \label{fig:system_architecture}
+\end{figure*}
+
+
 \subsection{Models}
+As illustrated in Fig.~\ref{fig:system_architecture}, the main multimodal architecture extracts visual features using ConvNeXt-Tiny and weather features using an MLP, then combines them through a learned gated-fusion module before classification. The experiments compare this approach with image-only and other fusion strategies.
+
 The baseline models are:
 \begin{enumerate}
     \item MobileNetV2 using images only;
