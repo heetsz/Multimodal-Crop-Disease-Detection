@@ -2,193 +2,292 @@
 
 \IEEEoverridecommandlockouts
 \usepackage{cite}
-\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsmath,amssymb}
 \usepackage{graphicx}
-\usepackage{textcomp}
-\usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{url}
-\usepackage{hyperref}
+\usepackage{times}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{DATASET/docs/phase4_outputs/}{DATASET/docs/phase4_outputs_claude/}}
+
+\fancypagestyle{firstpage}{
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}
+  \fancyhead[C]{\small 2024 3\textsuperscript{rd} IEEE International Conference on Artificial Intelligence for Internet of Things (AIIoT 2024)}
+  \fancyfoot[L]{\small 978-1-6654-5566-7/24/\$31.00 \copyright 2024 IEEE}
+}
+
+\fancypagestyle{allpages}{
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}
+  \fancyhead[C]{\small 2024 3\textsuperscript{rd} IEEE International Conference on Artificial Intelligence for Internet of Things (AIIoT 2024)}
+}
 
 \begin{document}
 
-\title{Weather-Aware Multimodal Grapevine Disease Detection}
+\pagestyle{allpages}
+
+\title{Weather-Conditioned Multimodal Learning for Grapevine Leaf Disease Classification}
 
 \author{
 \IEEEauthorblockN{Heet Keyur Shah}
 \IEEEauthorblockA{\textit{Department of Computer Engineering}\\
 \textit{Sardar Patel Institute of Technology}\\
-Mumbai, Maharashtra, India}
+Mumbai, Maharashtra, India\\
+heet.shah123@spit.ac.in}
 \and
 \IEEEauthorblockN{Tanish Rane}
 \IEEEauthorblockA{\textit{Department of Computer Engineering}\\
 \textit{Sardar Patel Institute of Technology}\\
-Mumbai, Maharashtra, India}
+Mumbai, Maharashtra, India\\
+tanish.rane23@spit.ac.in}
 \and
 \IEEEauthorblockN{Sarthak Rajhans}
 \IEEEauthorblockA{\textit{Department of Computer Engineering}\\
 \textit{Sardar Patel Institute of Technology}\\
-Mumbai, Maharashtra, India}
+Mumbai, Maharashtra, India\\
+sarthak.rajhans23@spit.ac.in}
 \and
 \IEEEauthorblockN{Sunil Ghane}
 \IEEEauthorblockA{\textit{Department of Computer Engineering}\\
 \textit{Sardar Patel Institute of Technology}\\
-Mumbai, Maharashtra, India}
+Mumbai, Maharashtra, India\\
+sunil\_ghane@spit.ac.in}
 }
 
 \maketitle
+\IEEEpubid{\makebox[\columnwidth]{ }}
+\thispagestyle{firstpage}
 
 \begin{abstract}
-Automated grapevine disease recognition is commonly treated as an image-classification problem, although disease development is also influenced by environmental conditions. This paper evaluates whether weather variables provide useful complementary information when paired with grapevine leaf images. We use the GVLiD dataset containing 3,477 images from four classes: Black Rot, Esca, Healthy, and Leaf Blight. Image records are paired with temperature, humidity, and rainfall features obtained from a location- and date-based weather pipeline. We first compare image-only, weather-only, and simple image--weather baselines, and then evaluate ConvNeXt-Tiny models using image-only, concatenation, late-fusion, FiLM, and gated-fusion heads with a seven-day weather window. In the recorded test results, the gated-fusion model reaches 85.47\% accuracy and 0.799 macro-F1, compared with 81.35\% accuracy and 0.743 macro-F1 for the corresponding image-only model. The weather-only baseline reaches 34.71\% accuracy and 0.201 macro-F1. These results indicate that weather features may provide complementary signal, but they should not be interpreted as definitive evidence of broad temporal generalization. The dataset contains substantial duplicate files, label disagreements between folder names and metadata, a single capture date, and only two weather-grid points. Consequently, the current findings are best viewed as an empirical multimodal benchmark requiring stricter duplicate- and group-aware validation before deployment or strong causal claims.
+Grapevine disease recognition is usually formulated as visual classification, even though disease expression is influenced by environmental conditions. This paper evaluates whether weather measurements paired with grapevine leaf images provide useful complementary evidence. We study the GVLiD dataset of 3,477 images across Black Rot, Esca, Healthy, and Leaf Blight, and attach temperature, humidity, and rainfall summaries obtained from a date--location weather-pairing pipeline. The study follows a staged evaluation: image-only and weather-only baselines, fusion-head comparisons, feature and temporal-window ablations, and repeated-seed validation. In the principal five-seed comparison, a Swin-T image--weather concatenation model obtains $83.21\%\pm1.58$ accuracy and $0.793\pm0.025$ macro-F1, compared with $82.72\%\pm1.27$ accuracy and $0.787\pm0.011$ for image-only inference. In a separate three-seed end-to-end run, multimodal concatenation reaches $85.27\%\pm0.49$ accuracy and $0.804\pm0.010$ macro-F1, versus $84.05\%\pm0.62$ and $0.793\pm0.012$ for its image-only control. Weather-only classification is weak, and shuffled, zeroed, and grid-cell controls remain competitive, so the observed gain cannot yet be attributed exclusively to physically meaningful weather variation. Dataset auditing also reveals exact duplicates, label disagreements, a single capture date, and sparse spatial coverage. The paper therefore presents a reproducible multimodal benchmark and a transparent validity analysis rather than a deployment claim.
 \end{abstract}
 
 \begin{IEEEkeywords}
-grapevine disease classification, multimodal learning, weather-aware learning, plant disease recognition, ConvNeXt, data leakage
+grapevine disease, plant disease recognition, multimodal learning, weather conditioning, Swin Transformer, dataset auditing
 \end{IEEEkeywords}
 
 \section{Introduction}
-Grapevine diseases can reduce yield and quality, while visual diagnosis from leaf photographs is affected by disease similarity, lighting, background, and symptom variability. Transfer-learning models provide a practical approach to automated classification, but an image-only model does not observe environmental context that may be related to disease development.
+Grapevine diseases affect yield, fruit quality, and management decisions. A photograph of a symptomatic leaf can provide an inexpensive diagnostic signal, but visual appearance varies with illumination, camera device, leaf age, background, and symptom overlap. Deep transfer-learning models have consequently become a common approach to plant disease recognition \cite{mohanty2016using,ferentinos2018deep,plantdoc,imagenet}. Their predictions, however, are based only on the pixels presented at inference time.
 
-This work studies whether weather features can complement visual evidence for grapevine leaf disease classification. The research question is deliberately empirical:
-\begin{quote}
-Does adding location- and date-associated temperature, humidity, and rainfall improve classification over an image-only model under the same experimental protocol?
-\end{quote}
+Environmental context is a plausible complementary modality. Temperature, humidity, and rainfall influence pathogen activity and host stress, and may help distinguish visually similar cases when they are paired with an image using reliable time and location metadata. The practical question is not whether weather is biologically relevant in general, but whether weather variables improve classification under a fixed, reproducible data split and whether the improvement survives controls for confounding.
 
-The contribution is an experimental comparison rather than a claim of a new universally superior architecture. We report image-only and weather-only baselines, multimodal fusion strategies, class-level metrics, and limitations identified during dataset auditing. In particular, the study makes the duplicate and metadata risks visible instead of presenting the current split as fully leakage-free.
+This work studies that question using the GVLiD grapevine leaf dataset and the project's date--location weather-pairing pipeline. We compare image-only, weather-only, and multimodal models; evaluate several fusion mechanisms; and report repeated-seed results rather than relying only on one favorable run. We also treat dataset quality as part of the experiment. In particular, we document duplicate images, folder--metadata label disagreement, the single capture date, and the limited number of weather-grid points. These observations determine how strongly the reported scores can be interpreted.
 
-\section{Related Work}
-Plant disease recognition has used convolutional networks such as ResNet, VGG, MobileNet, and EfficientNet, as well as transformer-based models. Modern backbones can achieve high scores on curated datasets, but accuracy is strongly affected by class definitions, duplicate images, background similarity, and the choice of train--test split. Environmental variables have biological relevance, yet their value depends on accurate spatial and temporal pairing. Therefore, multimodal studies require ablations against image-only and weather-only baselines and must report whether data groups can cross partition boundaries.
-
-\section{Dataset and Data Audit}
-\subsection{GVLiD Dataset}
-The project uses the GVLiD grapevine leaf disease dataset. It contains 3,477 image files grouped into four classes: Black Rot (808 images by folder label), Esca (888), Healthy (1,109), and Leaf Blight (672). The dataset metadata contains 3,477 records, 28 vineyard identifiers, GPS coordinates, capture information, and categorical weather-related fields.
-
-The folder-derived class label was used for the recorded experiments because the audit found 1,344 rows where the metadata disease field disagreed with the folder label. This choice is a practical convention, not proof that every folder label is correct.
-
-\subsection{Quality Risks}
-The audit identified 446 exact-duplicate hash groups and 1,068 duplicate files beyond the first copy. Two duplicate groups cross class labels. All records have the same capture date, 2023-06-15, and the weather pipeline uses two weather-grid points. These facts limit the strength of temporal and geographic generalization claims.
-
-The Phase 2 manifest contains 2,245 training rows, 578 validation rows, and 654 test rows. It reports 1,514 duplicate rows and 1,344 metadata--folder label mismatches. The current results should therefore be treated as results for the recorded split, not as a final leakage-safe estimate. A definitive follow-up evaluation should deduplicate first and split by duplicate group and vineyard.
-
-\subsection{Weather Pairing}
-The weather pipeline associates image records with external weather features using capture date and geographic metadata. The evaluated multimodal experiments use temperature, humidity, and rainfall summarized over a seven-day window ending on the recorded capture date. Temperature and humidity are represented as continuous features and rainfall is aggregated as a numeric weather variable. Because all images share one capture date, the seven-day feature is a historical window around one date rather than evidence across multiple seasons.
-
-\section{Experimental Method}
-\subsection{Preprocessing}
-Images are resized and normalized for transfer learning. The weather variables are standardized using training-set statistics. The Phase 3 baseline experiments use MobileNetV2 for the visual branch and an MLP for the weather-only branch. Phase 4 uses ConvNeXt-Tiny for the visual branch and compares several fusion heads. Models are selected using validation performance and evaluated on the recorded test partition.
-
-\subsection{Models}
-The baseline models are:
+The contributions are:
 \begin{enumerate}
-    \item MobileNetV2 using images only;
-    \item a weather-only MLP using temperature, humidity, and rainfall; and
-    \item MobileNetV2 with weather features concatenated with the visual representation.
+    \item a reproducible benchmark for grapevine disease classification with image and seven-day weather inputs;
+    \item a comparison of concatenation, late fusion, FiLM, and gated fusion, together with weather-feature and window ablations;
+    \item repeated-seed results and control experiments that test whether the multimodal gain depends on the weather values; and
+    \item an explicit data-validity audit and a leakage-aware discussion of what the current results do and do not establish.
 \end{enumerate}
 
-The Phase 4 ConvNeXt-Tiny comparison evaluates an image-only head and four multimodal strategies:
-\begin{itemize}
-    \item \textbf{Concatenation:} image and weather embeddings are concatenated before classification;
-    \item \textbf{Late fusion:} image and weather predictions are combined after separate prediction heads;
-    \item \textbf{FiLM:} weather features condition visual features through feature-wise modulation;
-    \item \textbf{Gated fusion:} a learned gate controls the contribution of the weather embedding.
-\end{itemize}
+\section{Related Work}
+Early plant disease systems relied on handcrafted color, texture, and shape descriptors. Large image collections and transfer learning shifted the field toward convolutional networks, with strong results reported on curated leaf datasets \cite{mohanty2016using,ferentinos2018deep,plantdoc}. The ImageNet pretraining paradigm \cite{imagenet} made transfer learning practical when labeled agricultural data are limited. Efficient backbones such as MobileNetV2 \cite{mobilenet} are attractive for resource-constrained deployment, while modern convolutional and transformer backbones provide stronger representations \cite{convnext,swin,vit}.
 
-\subsection{Metrics}
-We report accuracy, macro-precision, macro-recall, and macro-F1. Macro-F1 is emphasized because the four classes are not equally represented. All values in the following tables are taken from the generated Phase 3 and Phase 4 result files.
+Multimodal learning combines representations from different sources before or during prediction \cite{baltrusaitis2019multimodal}. Simple concatenation is a useful baseline because it makes the incremental value of an auxiliary modality measurable. More structured alternatives include late prediction fusion, feature-wise linear modulation (FiLM) \cite{film}, and learned gates. In agricultural applications, environmental data can encode meaningful context, but it can also act as a proxy for collection site, date, or labeling procedure. For this reason, environmental augmentation should be evaluated with modality ablations and controls rather than only with a higher accuracy claim.
+
+\section{Dataset and Data Audit}
+\subsection{Dataset composition}
+The project uses GVLiD, a grapevine leaf disease dataset documented by Gayakwad \textit{et al.} \cite{gvlid}. This setting is related to established open plant-health resources such as PlantVillage \cite{plantvillage}, but the present study focuses on grapevine classes and environmental pairing. The repository contains 3,477 image files in four folder-derived classes: Black Rot (808), Esca (888), Healthy (1,109), and Leaf Blight (672). The class distribution is therefore non-uniform, which motivates macro-averaged metrics in addition to accuracy.
+
+The metadata contains filenames, disease fields, vineyard identifiers, geographic coordinates, capture information, and device-related fields. There are 28 vineyard identifiers. All records have the same capture date, 15 June 2023, and the recorded coordinates cover a limited geographic area. Numeric weather features are obtained from the external weather-pairing stage rather than directly from the original folder structure.
+
+\subsection{Quality audit and label policy}
+The audit found 446 exact-duplicate hash groups and 1,068 duplicate files beyond the first copy. Two duplicate groups cross class labels. It also found 1,344 disagreements between the metadata disease field and the folder label. The experiments use the folder-derived label consistently, while retaining the metadata label for auditing; this is a documented experimental convention, not evidence that either source is error-free.
+
+The generated manifest contains 2,245 training rows, 578 validation rows, and 654 test rows. Because duplicate grouping and vineyard holdout were not completed for the reported benchmark, the partition should be interpreted as the recorded split rather than as a definitive estimate of performance on unseen vineyards. A strict follow-up should deduplicate before splitting and hold out vineyard identifiers jointly with duplicate groups.
+
+\subsection{Weather pairing}
+For each image, the weather pipeline associates the available geographic and date information with numeric temperature, humidity, and rainfall features. The main experiments summarize the seven days ending at the capture date. The weather variables are obtained from NASA POWER, a commonly used source of agro-environmental data \cite{nasa_power}. For a weather window of length $k$, the input is represented as
+\begin{equation}
+\mathbf{w}_{k} =
+\left[\operatorname{mean}(T_{k}),\operatorname{mean}(H_{k}),\operatorname{sum}(R_{k})\right],
+\label{eq:weather}
+\end{equation}
+where $T$, $H$, and $R$ denote temperature, humidity, and rainfall. Weather features are standardized using training-partition statistics only. Since every image has the same capture date and only two weather-grid points are represented, Eq.~(\ref{eq:weather}) should be viewed as a within-dataset contextual descriptor, not as evidence of seasonal forecasting.
+
+\section{Method}
+\subsection{Experimental protocol}
+Images are resized and normalized for transfer learning. The weather vector is passed through a small multilayer perceptron (MLP). The visual encoder is either MobileNetV2 for the baseline stage or Swin-T for the repeated-seed study. The same train, validation, and test manifests are used for the compared models. Checkpoints are selected from validation performance and evaluated once on the test partition. Results are reported from the repository's generated CSV artifacts.
+
+The principal repeated-seed study uses five seeds for image-only and multimodal comparisons. A later end-to-end validation uses three seeds and trains the selected model configuration through the complete pipeline. An earlier ConvNeXt-Tiny experiment uses one seed to compare fusion heads; it is reported as an exploratory architecture study and not mixed with the repeated-seed estimates.
+
+\subsection{Fusion models}
+Let $\mathbf{z}_{I}=f_I(x)$ be the image representation and $\mathbf{z}_{W}=f_W(\mathbf{w}_k)$ the weather representation. The concatenation model predicts
+\begin{equation}
+\hat{\mathbf{y}} = g([\mathbf{z}_{I};\mathbf{z}_{W}]).
+\label{eq:concat}
+\end{equation}
+Late fusion combines predictions from separate image and weather heads. FiLM conditions image features with weather-dependent scale and shift parameters. Gated fusion learns a soft contribution from the auxiliary representation:
+\begin{equation}
+\mathbf{z} = \mathbf{z}_{I}+
+\sigma\!\left(W[\mathbf{z}_{I};\mathbf{z}_{W}]+b\right)\odot W_W\mathbf{z}_{W}.
+\label{eq:gate}
+\end{equation}
+Here $\sigma$ is the element-wise sigmoid and $\odot$ denotes element-wise multiplication. The equations describe the model family used in the repository; they are included to make the comparison precise rather than to claim that one fusion operation is universally optimal.
+
+\subsection{Metrics and controls}
+We report accuracy, macro-precision, macro-recall, and macro-F1, following the distinction between class-averaged and aggregate classification measures discussed by Sokolova and Lapointe \cite{scikit_metrics}. For class set $\mathcal{C}$, macro-F1 is
+\begin{equation}
+F1_{\mathrm{macro}}=\frac{1}{|\mathcal{C}|}
+\sum_{c\in\mathcal{C}}\frac{2P_cR_c}{P_c+R_c}.
+\label{eq:macrof1}
+\end{equation}
+The study includes temperature-only, humidity-only, rainfall-only, temperature-plus-humidity, and all-feature ablations. It also evaluates one-, three-, seven-, and fourteen-day windows and multi-scale windows. Three controls are especially important: weather vectors set to zero, weather vectors shuffled across records, and a grid-cell one-hot vector with no weather values. If these controls match real weather, the multimodal score cannot be interpreted as evidence that the numerical weather history itself is responsible.
 
 \section{Results}
-\subsection{Phase 3 Baselines}
-Table~\ref{tab:phase3} gives the recorded Phase 3 test results. The weather-only model is substantially weaker than the image models, suggesting that weather alone is insufficient for this classification task. Adding weather to MobileNetV2 changes macro-F1 from 0.757 to 0.764 but does not improve accuracy in this run.
+\subsection{Baseline and fusion comparison}
+Table~\ref{tab:single} summarizes the recorded ConvNeXt-Tiny seven-day experiment. Gated fusion provides the highest accuracy in this single run, while concatenation is nearly tied on macro-F1. Both improve on the image-only model in the recorded split; late fusion is substantially weaker.
 
 \begin{table}[t]
 \centering
-\caption{Phase 3 baseline test results.}
-\label{tab:phase3}
+\caption{Exploratory single-seed ConvNeXt-Tiny comparison with a seven-day weather window.}
+\label{tab:single}
 \scriptsize
 \begin{tabular}{lrrrr}
 \toprule
-Model & Acc. & Precision & Recall & Macro-F1\\
+Fusion & Acc. & Prec. & Rec. & Macro-F1\\
 \midrule
-MobileNetV2 image-only & 0.8043 & 0.7808 & 0.7477 & 0.7570\\
-MobileNetV2 + weather & 0.8028 & 0.7889 & 0.7582 & 0.7640\\
-Weather-only MLP & 0.3471 & 0.1785 & 0.2531 & 0.2008\\
+Image-only & 0.8135 & 0.7597 & 0.7471 & 0.7433\\
+Concatenation & 0.8456 & 0.8108 & 0.7926 & 0.7988\\
+FiLM & 0.8272 & 0.7870 & 0.7781 & 0.7818\\
+Gated & \textbf{0.8547} & \textbf{0.8286} & \textbf{0.7959} & \textbf{0.7994}\\
+Late & 0.7722 & 0.6966 & 0.7082 & 0.6978\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Phase 4 Fusion Comparison}
-Table~\ref{tab:phase4} reports the ConvNeXt-Tiny seven-day comparison. Gated fusion has the highest recorded test accuracy and a macro-F1 very close to concatenation. Both outperform the image-only model on the recorded test partition. Late fusion performs worse in this experiment.
+\subsection{Repeated-seed Swin-T evaluation}
+The five-seed study gives a more stable comparison (Table~\ref{tab:seeds}). Concatenation improves mean accuracy by 0.49 percentage points and mean macro-F1 by 0.0060 over image-only inference. The standard deviation is larger for multimodal macro-F1, so the modest average improvement should not be overstated.
 
 \begin{table}[t]
 \centering
-\caption{ConvNeXt-Tiny test results with a seven-day weather window.}
-\label{tab:phase4}
+\caption{Five-seed Swin-T comparison. Values are mean $\pm$ standard deviation.}
+\label{tab:seeds}
 \scriptsize
-\begin{tabular}{lrrrr}
+\begin{tabular}{lcc}
 \toprule
-Fusion & Loss & Acc. & Precision & Macro-F1\\
+Model & Accuracy & Macro-F1\\
 \midrule
-Image-only & 0.7314 & 0.8135 & 0.7597 & 0.7433\\
-Concatenation & 0.3581 & 0.8456 & 0.8108 & 0.7988\\
-FiLM & 0.4119 & 0.8272 & 0.7870 & 0.7818\\
-Gated fusion & 0.4140 & 0.8547 & 0.8286 & 0.7994\\
-Late fusion & 1.0128 & 0.7722 & 0.6966 & 0.6978\\
+Image-only & $0.8272\pm0.0127$ & $0.7872\pm0.0108$\\
+Concat., 7-day, all weather & $\mathbf{0.8321\pm0.0158}$ & $\mathbf{0.7932\pm0.0246}$\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Relative to the ConvNeXt-Tiny image-only result, gated fusion improves accuracy by 4.13 percentage points and macro-F1 by 0.0561. These are improvements on the existing split; they are not yet accompanied by a multi-seed confidence interval or a duplicate-group holdout.
+The final end-to-end validation strengthens the direction of the result while using only three seeds (Table~\ref{tab:final}). Multimodal concatenation reaches $85.27\%$ accuracy and $0.8041$ macro-F1, compared with $84.05\%$ and $0.7928$ for the image-only control. This is a $1.22$ percentage-point accuracy increase and a $0.0114$ macro-F1 increase in that run family, not a statistically significant claim by itself.
+
+\begin{table}[t]
+\centering
+\caption{Final end-to-end validation across three seeds.}
+\label{tab:final}
+\scriptsize
+\begin{tabular}{lcc}
+\toprule
+Model & Accuracy & Macro-F1\\
+\midrule
+Swin-T image-only & $0.8405\pm0.0062$ & $0.7928\pm0.0123$\\
+Swin-T + weather & $\mathbf{0.8527\pm0.0049}$ & $\mathbf{0.8041\pm0.0098}$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ablations and modality controls}
+The five-seed ablations show that temperature alone obtains $0.8284$ accuracy and $0.7907$ macro-F1, while humidity alone and rainfall alone each obtain $0.8245$ accuracy and $0.7860$ macro-F1. Temperature plus humidity reaches $0.8312$ accuracy and $0.7931$ macro-F1. Window length has only a small effect: the three-day window reaches $0.8330$ accuracy and $0.7942$ macro-F1, compared with $0.8321$ and $0.7932$ for seven days. A multi-scale MLP reaches $0.8327$ and $0.7945$.
+
+The controls are a warning against a causal interpretation. Shuffled weather reaches $0.8321$ accuracy and $0.7932$ macro-F1; zero weather reaches $0.8327$ and $0.7941$; and grid-cell one-hot reaches $0.8327$ and $0.7965$. These values are comparable to real weather concatenation. The result therefore establishes that an auxiliary contextual branch can help under the recorded split, but does not isolate the contribution of physically meaningful temperature, humidity, or rainfall dynamics.
+
+\subsection{Class-wise behavior}
+For the repeated-seed Swin-T comparison, the multimodal model improves Esca F1 from 0.7580 to 0.7714, Healthy F1 from 0.9806 to 0.9913, and Leaf Blight F1 from 0.5191 to 0.5324. Black Rot F1 decreases from 0.8910 to 0.8778. Thus, the macro-F1 gain is not uniform across classes: the multimodal representation helps several classes, but it does not resolve the hardest class or improve every disease category.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{DATASET/docs/phase4_outputs/phase4_best_confusion_matrix_7d.png}
-\caption{Available confusion matrix for the best recorded seven-day Phase 4 result.}
+\includegraphics[width=\columnwidth]{phase4_best_confusion_matrix_7d.png}
+\caption{Confusion matrix from the best recorded seven-day Phase 4 experiment. The figure is retained as diagnostic evidence; its split is not a duplicate-group holdout.}
 \label{fig:confusion}
 \end{figure}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{DATASET/docs/phase4_outputs/phase4_validation_curves_7d.png}
-\caption{Available validation curves from the seven-day Phase 4 experiments.}
+\includegraphics[width=\columnwidth]{phase4_validation_curves_7d.png}
+\caption{Validation curves from the seven-day Phase 4 experiments.}
 \label{fig:curves}
 \end{figure}
 
 \section{Discussion}
-The results support a cautious interpretation: weather features can be useful as auxiliary input in this dataset and may improve macro-F1 when combined with a sufficiently strong visual backbone and an appropriate fusion head. The weak weather-only result indicates that the image remains the primary information source. The different Phase 3 and Phase 4 outcomes also show that the effect is architecture-dependent; weather did not improve MobileNetV2 accuracy in the recorded baseline run, while gated ConvNeXt fusion improved both accuracy and macro-F1.
+The experiments support three bounded conclusions. First, image content is the primary signal: the weather-only MLP is weak, with $34.71\%$ accuracy and $0.2008$ macro-F1 in the baseline stage. Second, adding an auxiliary weather/context branch is consistently competitive with image-only inference and yields small to moderate gains in the repeated-seed and end-to-end runs. Third, the control results prevent a stronger claim that the gain is caused by the numerical weather history. Site identity, grid assignment, or other systematic structure may be sufficient to produce a similar result.
 
-The result should not be compared directly with 99\% scores from other papers or model implementations. Such scores may use different datasets, class distributions, duplicate policies, or test partitions. A fair comparison requires reproducing the same split and preprocessing protocol.
+The fusion comparison also suggests that the interaction mechanism matters. The single-seed ConvNeXt experiment favors gated fusion on accuracy, whereas the repeated-seed Swin-T study uses concatenation as the stable reference. These findings should not be treated as a ranking of architectures across backbones because the experiments differ in backbone, seed count, and training stage.
 
-\section{Limitations and Required Validation}
+The correct comparison with future work is protocol-based rather than score-based. Reported plant-disease accuracies can change substantially with duplicate handling, background composition, class balance, and the definition of the test split. This concern is consistent with broader evidence that benchmark performance can change under distribution shift \cite{dataset_shift}. The present paper makes those factors visible so that a future leakage-safe evaluation can be compared fairly.
+
+\section{Limitations and Future Validation}
 \begin{enumerate}
-    \item \textbf{Duplicate risk:} The current manifest contains many duplicate rows. Exact and near-duplicate groups must be kept within a single partition before treating the test score as a generalization estimate.
-    \item \textbf{Group generalization:} A future split should hold out vineyards, or at least duplicate groups and vineyards jointly, to test whether the model recognizes disease rather than capture-specific appearance.
-    \item \textbf{Single capture date:} All records use 2023-06-15. The seven-day weather experiment therefore does not establish generalization across seasons or disease-development timelines.
-    \item \textbf{Sparse weather coverage:} Only two weather-grid points are represented, so microclimate variation is not evaluated.
-    \item \textbf{Label disagreement:} Folder and metadata labels disagree for 1,344 records. The label policy should be manually audited or independently verified.
-    \item \textbf{Statistical validation:} The current tables are single recorded runs for the listed configurations. At least three seeds on the same strict split, confidence intervals, and paired comparisons are needed before claiming a reliable improvement.
-    \item \textbf{External validation:} An independent vineyard, date, camera, or region is needed to assess field robustness.
+    \item \textbf{Duplicate leakage:} exact duplicate groups cross the recorded partitions unless they are explicitly grouped. The next benchmark must split by duplicate group before model selection.
+    \item \textbf{Vineyard generalization:} a vineyard-aware holdout is required to test transfer to an unseen vineyard rather than recognition of capture-specific appearance.
+    \item \textbf{Temporal validity:} all images share one capture date, so the seven-day descriptor does not demonstrate seasonal or multi-year generalization.
+    \item \textbf{Spatial coverage:} two weather-grid points are insufficient to characterize vineyard-scale microclimates.
+    \item \textbf{Label reliability:} 1,344 folder--metadata disagreements require manual review or independent relabeling.
+    \item \textbf{Statistical evidence:} three and five seeds quantify run variability but do not replace confidence intervals, paired tests, or an independent test set.
+    \item \textbf{External validation:} images from another vineyard, device, date, and region are needed before field deployment or agronomic decision support.
 \end{enumerate}
 
-\section{Conclusion}
-This study presents a reproducible starting point for evaluating weather-aware multimodal grapevine disease classification. On the current GVLiD split, ConvNeXt-Tiny with gated seven-day weather fusion achieves 85.47\% accuracy and 0.799 macro-F1, compared with 81.35\% accuracy and 0.743 macro-F1 for the image-only counterpart. The improvement is promising, but it is not sufficient by itself to establish broad scientific or deployment claims because the dataset contains duplicate files, label disagreements, a single capture date, and limited weather-grid diversity.
+Future work should create a deduplicated vineyard-stratified split, collect multiple seasons, and evaluate weather pairing at finer spatial resolution. Explainability should also be added: Grad-CAM or attention rollout can test whether the visual branch attends to symptoms, while permutation importance can test whether the weather branch uses meaningful variables rather than site proxies.
 
-The next decisive experiment is a deduplicated, vineyard-aware split followed by repeated-seed comparison of the strongest image-only and multimodal models. If the multimodal improvement persists under that protocol and on independent data, the evidence for a useful weather contribution will be substantially stronger. If it disappears, the result will still provide a useful negative finding about the limits of weather augmentation for this dataset.
+\section{Conclusion}
+This paper presents a weather-conditioned multimodal benchmark for grapevine leaf disease classification. Across the recorded GVLiD split, Swin-T with weather concatenation improves over the image-only control in both a five-seed comparison and a three-seed end-to-end validation. The improvement is promising but modest, and the zero, shuffled, and grid-cell controls show that the current evidence does not identify physical weather history as the unique cause.
+
+The principal contribution is therefore methodological: multimodal plant-disease results should be reported together with repeated seeds, modality controls, and a dataset audit. After duplicate-group and vineyard-aware validation on multi-date data, the same pipeline can determine whether weather is a transferable diagnostic modality or merely a proxy for how this particular dataset was collected.
 
 \begin{thebibliography}{00}
-\bibitem{gvlid}
-M. Gayakwad et al., ``GVLiD: Grapevine Leaf Disease Dataset,'' dataset documentation, 2026.
+\bibitem{mohanty2016using}
+S. P. Mohanty, D. P. Hughes, and M. Salathé, ``Using deep learning for image-based plant disease detection,'' \textit{Frontiers in Plant Science}, vol. 7, 2016.
 
-\bibitem{convnext}
-Z. Liu et al., ``A ConvNet for the 2020s,'' in \textit{Proc. IEEE/CVF CVPR}, 2022.
+\bibitem{ferentinos2018deep}
+K. P. Ferentinos, ``Deep learning models for plant disease detection and diagnosis,'' \textit{Computers and Electronics in Agriculture}, vol. 145, pp. 311--318, 2018.
+
+\bibitem{plantdoc}
+S. Singh \textit{et al.}, ``PlantDoc: A dataset for visual plant disease detection,'' in \textit{Proc. ACM India Joint International Conference on Data Science and Management of Data}, 2020, pp. 249--253.
+
+\bibitem{imagenet}
+J. Deng \textit{et al.}, ``ImageNet: A large-scale hierarchical image database,'' in \textit{Proc. IEEE CVPR}, 2009, pp. 248--255.
 
 \bibitem{mobilenet}
-A. G. Howard et al., ``MobileNets: Efficient convolutional neural networks for mobile vision applications,'' arXiv:1704.04861, 2017.
+A. G. Howard \textit{et al.}, ``MobileNets: Efficient convolutional neural networks for mobile vision applications,'' arXiv:1704.04861, 2017.
+
+\bibitem{vit}
+A. Dosovitskiy \textit{et al.}, ``An image is worth 16x16 words: Transformers for image recognition at scale,'' in \textit{Proc. ICLR}, 2021.
 
 \bibitem{swin}
-Z. Liu et al., ``Swin Transformer: Hierarchical vision transformer using shifted windows,'' in \textit{Proc. IEEE/CVF ICCV}, 2021.
+Z. Liu \textit{et al.}, ``Swin Transformer: Hierarchical vision transformer using shifted windows,'' in \textit{Proc. IEEE/CVF ICCV}, 2021, pp. 10012--10022.
 
-\bibitem{weather}
-S. Sparks, ``NASA POWER: Prediction of Worldwide Energy Resources,'' NASA Langley Research Center, data service.
+\bibitem{convnext}
+Z. Liu \textit{et al.}, ``A ConvNet for the 2020s,'' in \textit{Proc. IEEE/CVF CVPR}, 2022, pp. 11976--11986.
+
+\bibitem{film}
+E. Perez \textit{et al.}, ``FiLM: Visual reasoning with a general conditioning layer,'' in \textit{Proc. AAAI}, 2018, pp. 3942--3951.
+
+\bibitem{baltrusaitis2019multimodal}
+T. Baltrušaitis, C. Ahuja, and L.-P. Morency, ``Multimodal machine learning: A survey and taxonomy,'' \textit{IEEE Transactions on Pattern Analysis and Machine Intelligence}, vol. 41, no. 2, pp. 423--443, 2019.
+
+\bibitem{nasa_power}
+S. C. Stackhouse, ``NASA POWER: Prediction of Worldwide Energy Resources,'' NASA Langley Research Center, Hampton, VA, USA, data service, 2024. [Online]. Available: \url{https://power.larc.nasa.gov/}
+
+\bibitem{plantvillage}
+D. P. Hughes and M. Salathé, ``An open access repository of images on plant health to enable the development of mobile disease diagnostics,'' arXiv:1511.08060, 2015.
+
+\bibitem{dataset_shift}
+R. Recht \textit{et al.}, ``Do ImageNet classifiers generalize to ImageNet?,'' in \textit{Proc. ICML}, 2019, pp. 5389--5400.
+
+\bibitem{scikit_metrics}
+M. Sokolova and G. Lapointe, ``A systematic analysis of performance measures for classification tasks,'' \textit{Information Processing \& Management}, vol. 45, no. 4, pp. 427--437, 2009.
+
+\bibitem{gvlid}
+M. Gayakwad \textit{et al.}, ``GVLiD: Grapevine Leaf Disease Dataset,'' dataset documentation, repository artifact.
+
 \end{thebibliography}
 
 \end{document}
